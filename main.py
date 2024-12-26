@@ -33,6 +33,9 @@ for idx, emotion in enumerate(prompts.emotions):
 
 results_dict = {image_path: [] for image_path in images}
 
+total_iterations = 50 * len(prompts.prompts)
+current_iteration = 0
+
 for _ in range(50):
     for prompt in prompts.prompts:
         while True:
@@ -45,6 +48,10 @@ for _ in range(50):
             except google.api_core.exceptions.ResourceExhausted:
                 print("Quota exhausted. Retrying after a delay...")
                 time.sleep(30)
+        current_iteration += 1
+        progress = (current_iteration / total_iterations) * 100
+        print(f"Progress: {progress:.2f}%")
+
 
 for image_path, scores in results_dict.items():
     avg_scores = np.mean(scores)
