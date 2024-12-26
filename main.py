@@ -36,11 +36,14 @@ results_dict = {image_path: [] for image_path in images}
 total_iterations = 50 * len(prompts.prompts)
 current_iteration = 0
 
+# Upload images
+uploaded_files = [genai.upload_file(image_path) for image_path in images]
+
 for _ in range(50):
     for prompt in prompts.prompts:
         while True:
             try:
-                response = model.generate_content([prompt] + [PIL.Image.open(image_path) for image_path in images])
+                response = model.generate_content([prompt] + uploaded_files)
                 scores = response.text.strip().split()
                 for i, image_path in enumerate(images):
                     results_dict[image_path].append(float(scores[i]))
@@ -48,10 +51,12 @@ for _ in range(50):
             except google.api_core.exceptions.ResourceExhausted:
                 print("Quota exhausted. Retrying after a delay...")
                 time.sleep(30)
+            except google.api_core.exceptions.InvalidArgument as e:
+                print(f"Invalid argument: {e}")
+                break
         current_iteration += 1
         progress = (current_iteration / total_iterations) * 100
         print(f"Progress: {progress:.2f}%")
-
 
 for image_path, scores in results_dict.items():
     avg_scores = np.mean(scores)
