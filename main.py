@@ -2,6 +2,7 @@ import PIL.Image
 import os
 import google.generativeai as genai
 import openpyxl
+import prompts
 
 genai.configure(api_key="AIzaSyAcbaTLP7YJlAU4_OOfc2NVvAwVTkL6Yew")
 folder_path = "images"
@@ -21,7 +22,8 @@ ws.append(["file name", "radosc", "zlosc", "smutek", "strach"])
 
 for image_path in images:
     sample_file = PIL.Image.open(image_path)
-    response = model.generate_content([prompt, sample_file])
+    for i in prompts.prompts:
+        response = model.generate_content([prompt, sample_file])
     scores = response.text.strip().split()
     ws.append([os.path.basename(image_path)] + scores)
 
