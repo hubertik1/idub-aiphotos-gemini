@@ -13,12 +13,7 @@ images = [
 
 model = genai.GenerativeModel(model_name="gemini-1.5-flash")
 
-prompt = """ocen ile danej emocji w skali od 1-9 jest na obrazie, wypisuj tylko liczbe po spacji
-emocje do ocenienia:
-radosc
-zlosc 
-smutek
-strach"""
+
 
 wb = openpyxl.Workbook()
 ws = wb.active
