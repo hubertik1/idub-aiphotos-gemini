@@ -40,26 +40,37 @@ current_iteration = 0
 
 
 
-for _ in range(50):
+total_iterations = 50 * len(prompts.prompts) * len(images)
+current_iteration = 0
+
+for image_path in images:
     for prompt in prompts.prompts:
-        while True:
-            try:
-                response = model.generate_content([prompt] + uploaded_files)
-                print(response.text)
-                scores = response.text.strip().split()
-                print(scores)
-                for i, image_path in enumerate(images):
-                    results_dict[image_path].append(float(scores[i]))
-                break
-            except google.api_core.exceptions.ResourceExhausted:
-                print("Quota exhausted. Retrying after a delay...")
-                time.sleep(30)
-            except google.api_core.exceptions.InvalidArgument as e:
-                print(f"Invalid argument: {e}")
-                break
-        current_iteration += 1
-        progress = (current_iteration / total_iterations) * 100
-        print(f"Progress: {progress:.2f}%")
+        for _ in range(50):
+            while True:
+                try:
+                    response = model.generate_content([prompt, genai.upload_file(image_path)])
+                    print(response.text)
+                    scores = response.text.strip().split()
+                    print(scores)
+                    if len(scores) != 1:
+                        print(f"Warning: Expected 1 score, got {len(scores)} instead. Skipping...")
+                        break
+                    results_dict[image_path].append(float(scores[0]))
+                    break
+                except google.api_core.exceptions.ResourceExhausted:
+                    print("Quota exhausted. Retrying after a delay...")
+                    time.sleep(30)
+                except google.api_core.exceptions.InvalidArgument as e:
+                    print(f"Invalid argument: {e}")
+                    break
+            current_iteration += 1
+            progress = (current_iteration / total_iterations) * 100
+            print(f"Progress: {progress:.2f}%")
+
+for image_path, scores in results_dict.items():
+    avg_scores = np.mean(scores)
+    std_dev_scores = np.std(scores)
+    ws.append([os.path.basename(image_path), avg_scores, std_dev_scores])
 
 for image_path, scores in results_dict.items():
     avg_scores = np.mean(scores)
