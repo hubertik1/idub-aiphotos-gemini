@@ -15,6 +15,8 @@ images = [
     if f.lower().endswith((".jpg", ".jpeg", ".png"))
 ]
 
+uploaded_files = [genai.upload_file(image_path) for image_path in images]
+
 model = genai.GenerativeModel(model_name="gemini-1.5-flash")
 
 wb = openpyxl.Workbook()
@@ -36,15 +38,16 @@ results_dict = {image_path: [] for image_path in images}
 total_iterations = 50 * len(prompts.prompts)
 current_iteration = 0
 
-# Upload images
-uploaded_files = [genai.upload_file(image_path) for image_path in images]
+
 
 for _ in range(50):
     for prompt in prompts.prompts:
         while True:
             try:
                 response = model.generate_content([prompt] + uploaded_files)
+                print(response.text)
                 scores = response.text.strip().split()
+                print(scores)
                 for i, image_path in enumerate(images):
                     results_dict[image_path].append(float(scores[i]))
                 break
