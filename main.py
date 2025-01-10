@@ -19,45 +19,48 @@ uploaded_files = [genai.upload_file(image_path) for image_path in images]
 
 model = genai.GenerativeModel(model_name="gemini-1.5-flash")
 
+results_dict = {
+    image_path: {emotion: [] for emotion in prompts.emotions}
+    for image_path in images
+}
 
-
-results_dict = {image_path: [[] for _ in prompts.prompt] for image_path in images}
-
-total_iterations = number_of_prompts * len(images)
+total_iterations =  len(images)* 3
 current_iteration = 0
 
-for image_path in images:
-    try:
-        response = model.generate_content([prompts.prompt, genai.upload_file(image_path)])
-        lines = response.text.strip().split('\n')
-        for i, line in enumerate(lines):
-            try:
+for _ in range(3):
+    for image_path in images:
+        try:
+            response = model.generate_content([prompts.prompt[0], genai.upload_file(image_path)])
+            print(response.text)
+            lines = response.text.strip().split('\n')
+            for i, line in enumerate(lines):
                 score = float(line.strip())
-                results_dict[image_path][i].append(score)
-            except ValueError:
-                print(f"Warning: Could not parse score '{line}'")
-    except google.api_core.exceptions.ResourceExhausted:
-        print("Quota exhausted. Skipping image...")
-    except google.api_core.exceptions.InvalidArgument as e:
-        print(f"Invalid argument: {e}")
-    current_iteration += 1
-    progress = (current_iteration / total_iterations) * 100
-    print(f"Progress: {progress:.2f}%")
+                results_dict[image_path][prompts.emotions[i]].append(score)
+        except google.api_core.exceptions.ResourceExhausted:
+            print("Quota exhausted. Skipping image...")
+        except google.api_core.exceptions.InvalidArgument as e:
+            print(f"Invalid argument: {e}")
+        current_iteration += 1
+        progress = (current_iteration / total_iterations) * 100
+        print(f"Progress: {progress:.2f}%")
 
 with open("wyniki.csv", "w", newline="", encoding="utf-8") as csvfile:
     writer = csv.writer(csvfile)
     header = ["File"]
-    for i in range(number_of_prompts):
-        header.append(f"Emotion_{i+1}_Avg")
-        header.append(f"Emotion_{i+1}_Std")
+    for emotion in prompts.emotions:
+        header.append(f"{emotion}_Avg")
+        header.append(f"{emotion}_Std")
     writer.writerow(header)
 
-    for image_path, emotion_scores_list in results_dict.items():
+    for image_path, emotion_scores_dict in results_dict.items():
         row = [os.path.basename(image_path)]
-        for scores in emotion_scores_list:
+        for emotion in prompts.emotions:
+            scores = emotion_scores_dict[emotion]
             if scores:
                 row.append(np.mean(scores))
                 row.append(np.std(scores))
             else:
                 row.extend(["", ""])
         writer.writerow(row)
+
+print(results_dict)
