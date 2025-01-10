@@ -57,8 +57,8 @@ with open("wyniki.csv", "w", newline="", encoding="utf-8") as csvfile:
         for emotion in prompts.emotions:
             scores = emotion_scores_dict[emotion]
             if scores:
-                row.append(np.mean(scores))
-                row.append(np.std(scores))
+                row.append(round(np.mean(scores),2))
+                row.append(round(np.std(scores),2))
             else:
                 row.extend(["", ""])
         writer.writerow(row)
