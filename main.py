@@ -21,7 +21,7 @@ model = genai.GenerativeModel(model_name="gemini-1.5-flash")
 
 
 
-results_dict = {image_path: [[] for _ in prompts.prompts] for image_path in images}
+results_dict = {image_path: [[] for _ in prompts.prompt] for image_path in images}
 
 total_iterations = number_of_prompts * len(images)
 current_iteration = 0
