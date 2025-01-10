@@ -39,7 +39,6 @@ for image_path in images:
                     break
                 results_dict[image_path].append(float(scores[0]))
                 break
-                print(results_dict[image_path])
             except google.api_core.exceptions.ResourceExhausted:
                 print("Quota exhausted. Retrying after a delay...")
                 time.sleep(30)
