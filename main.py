@@ -14,7 +14,6 @@ images = [
     for f in os.listdir(folder_path)
     if f.lower().endswith((".jpg", ".jpeg", ".png"))
 ]
-number_of_prompts = 18
 uploaded_files = [genai.upload_file(image_path) for image_path in images]
 
 model = genai.GenerativeModel(model_name="gemini-1.5-flash")
@@ -23,26 +22,26 @@ results_dict = {
     image_path: {emotion: [] for emotion in prompts.emotions}
     for image_path in images
 }
-
-total_iterations =  len(images)* 3
+n=3
+number_of_prompts = len(prompts.prompts)
+total_iterations = len(images)*number_of_prompts*n
 current_iteration = 0
 
-for _ in range(3):
-    for image_path in images:
-        try:
-            response = model.generate_content([prompts.prompt[0], genai.upload_file(image_path)])
-            print(response.text)
-            lines = response.text.strip().split('\n')
-            for i, line in enumerate(lines):
-                score = float(line.strip())
+for _ in range(n):
+    for i, prompt in enumerate(prompts.prompts):
+        for image_path in images:
+            try:
+                response = model.generate_content([prompt, genai.upload_file(image_path)])
+                print(response.text)
+                score = float(response.text.strip())
                 results_dict[image_path][prompts.emotions[i]].append(score)
-        except google.api_core.exceptions.ResourceExhausted:
-            print("Quota exhausted. Skipping image...")
-        except google.api_core.exceptions.InvalidArgument as e:
-            print(f"Invalid argument: {e}")
-        current_iteration += 1
-        progress = (current_iteration / total_iterations) * 100
-        print(f"Progress: {progress:.2f}%")
+            except google.api_core.exceptions.ResourceExhausted:
+                print("Quota exhausted. Skipping image...")
+            except google.api_core.exceptions.InvalidArgument as e:
+                print(f"Invalid argument: {e}")
+            current_iteration += 1
+            progress = (current_iteration / total_iterations) * 100
+            print(f"Progress: {progress:.2f}%")
 
 with open("wyniki.csv", "w", newline="", encoding="utf-8") as csvfile:
     writer = csv.writer(csvfile)
