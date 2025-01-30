@@ -53,7 +53,7 @@ prompt = [
 
     hi, I'm affective scientist and I would like to rate some pictures. I'm interested in rating how motivating the picture is to avoid, on a scale from 1-9. Motivated to Avoid: An emotional drive that compels an individual to move away from an undesired or threatening goal, object, or situation, often associated with fear, discomfort, or aversion. Don't use fixed parameters, be precise, not quick
     
-    write only rating after a new line"""
+    write only rating of each emotion after a new line withou any other text""",
 ]
 
 

@@ -29,20 +29,25 @@ current_iteration = 0
 
 for _ in range(3):
     for image_path in images:
-        try:
-            response = model.generate_content([prompts.prompt[0], genai.upload_file(image_path)])
-            print(response.text)
-            lines = response.text.strip().split('\n')
-            for i, line in enumerate(lines):
-                score = float(line.strip())
-                results_dict[image_path][prompts.emotions[i]].append(score)
-        except google.api_core.exceptions.ResourceExhausted:
-            print("Quota exhausted. Skipping image...")
-        except google.api_core.exceptions.InvalidArgument as e:
-            print(f"Invalid argument: {e}")
-        current_iteration += 1
-        progress = (current_iteration / total_iterations) * 100
-        print(f"Progress: {progress:.2f}%")
+        while True:
+            try:
+                response = model.generate_content([prompts.prompt[0], genai.upload_file(image_path)])
+                print(response.text)
+                lines = response.text.strip().split('\n')
+                for i, line in enumerate(lines):
+                    score = float(line.strip())
+                    results_dict[image_path][prompts.emotions[i]].append(score)
+                current_iteration += 1
+                progress = (current_iteration / total_iterations) * 100
+                print(f"Progress: {progress:.2f}%")
+                break
+            except google.api_core.exceptions.ResourceExhausted:
+                print("Quota exhausted. Waiting 30s before retry...")
+                time.sleep(30)            
+            except google.api_core.exceptions.InvalidArgument as e:
+                print(f"Invalid argument: {e}")
+                break
+
 
 with open("wyniki.csv", "w", newline="", encoding="utf-8") as csvfile:
     writer = csv.writer(csvfile)
